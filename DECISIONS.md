@@ -2,7 +2,9 @@
 
 ## Setup
 - Postgres in Docker (container `plants-db`). SQLite not allowed.
-- pip + `requirements.txt`, no uv. Update with `python -m pip freeze > requirements.txt`.
+- pip + `requirements.txt`, no uv. Update with
+  `python -m pip freeze | Out-File -Encoding utf8 requirements.txt`
+  (plain `>` in PowerShell writes UTF-16, which git treats as binary).
 - DB password in code for now, move to `.env` later.
 
 ## Structure (repository pattern)
@@ -15,6 +17,9 @@
 - Tables: `users`, `species`, `plants`, `care_events`
 - **Species** holds the needs: watering interval, sunlight, temperature.
   Why: all tomatoes need the same, so store it once.
+- Sunlight is stored as **DLI** (Daily Light Integral, float). The backend derives
+  shade / partial sun / full sun from it; the user can see both, or enter a measured DLI.
+  Species stores a range: `min_dli` and `max_dli`.
 - **Plant** holds name, actual location, and links to species and user.
 - Multiple plants of the same species are allowed, so name ≠ species.
 - No "indoor" flag on species. Any plant can live indoors if the conditions fit.
