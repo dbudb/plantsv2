@@ -24,6 +24,20 @@
 - Multiple plants of the same species are allowed, so name ≠ species.
 - No "indoor" flag on species. Any plant can live indoors if the conditions fit.
   Whether a place suits a plant is calculated from its needs vs. the conditions.
+- **Plant dates:** only `created_at` (added to app, automatic).
+  No `born_at`: the real start is an origin event (see below).
+- **Event types:** Python Enum in code (not a table), because the code needs to
+  react to them (e.g. watering → reminder). New type = one new line.
+- **Origin events:** SOWING or ACQUIRED mark the real start of a plant. They can be
+  dated in the past (event has its own timestamp). `created_at` is only technical.
+- Later: ask the user "do you know when you sowed/got this?" and add the origin event.
+- **Care events** link to the plant (`plant_id`), not the other way round.
+  All events of a plant sorted by time = its documentation.
+- Care event has one `amount` column (nullable). The event type decides what it means:
+  watering = ml water, fertilizing = ml fertilizer, repotting = liters soil,
+  harvest = grams (maybe). Pruning etc. have no amount.
+  Unit isn't stored; the backend derives it from the type.
+  Open: `notes` field for extras like which fertilizer?
 - Build step by step: `species` first, then `plants`, then the rest.
 
 ## Features
