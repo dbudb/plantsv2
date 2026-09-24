@@ -7,6 +7,15 @@
   (plain `>` in PowerShell writes UTF-16, which git treats as binary).
 - DB password in code for now, move to `.env` later.
 
+## Before the first push (to-do)
+- [ ] Move the DB URL into `.env`, add `.env` to `.gitignore`, `db.py` reads it from there.
+- [ ] Give the DB a new password (the old one is in the git history).
+- [ ] One clean initial migration, un-ignore `alembic/versions/`, commit it.
+
+- **Migrations while developing:** `alembic/versions/` is in `.gitignore` for now.
+  Before the first push: generate ONE clean initial migration, remove the line
+  from `.gitignore`, commit it. After pushing, never edit a migration, only add new ones.
+
 ## Structure (repository pattern)
 - `db.py` — connection (engine, SessionLocal)
 - `models.py` — tables

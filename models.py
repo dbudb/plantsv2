@@ -51,6 +51,6 @@ class CareEvent(Base):
     __tablename__ = "care_events"
     id: Mapped[int] = mapped_column(primary_key=True)
     plant_id: Mapped[int] = mapped_column(ForeignKey("plants.id"))
-    event_type: Mapped[EventType] = mapped_column(Enum(EventType, native_enum=False))
+    event_type: Mapped[EventType] = mapped_column(Enum(EventType, native_enum=False, length=50))
     amount: Mapped[float | None] = mapped_column()
     timestamp: Mapped[datetime] = mapped_column()

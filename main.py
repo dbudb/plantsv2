@@ -1,5 +1,4 @@
 from fastapi import FastAPI
-from pydantic import BaseModel
 
 print("file loading")
 app = FastAPI()
@@ -19,9 +18,3 @@ print("hello registered")
 @app.get("/plants")
 def plants():
     return plants
-
-
-from db import db_engine
-from models import Base
-
-# Base.metadata.create_all(db_engine)
