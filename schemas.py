@@ -1,4 +1,4 @@
-"""Defines what the API sents in it's HTTP response body."""
+"""Defines what the API sends in it's HTTP response body."""
 
 from pydantic import BaseModel, ConfigDict
 
