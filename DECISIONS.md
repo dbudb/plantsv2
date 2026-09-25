@@ -18,9 +18,31 @@
 
 ## Structure (repository pattern)
 - `db.py` — connection (engine, SessionLocal)
-- `models.py` — tables
-- `plant_repository.py` — all DB functions for plants
+- `models.py` — tables (how data is **stored**)
+- `schemas.py` — Pydantic models (what the API **sends back**, later also receives)
+- `species_repository.py` — all DB functions for species
+- `plant_repository.py` — all DB functions for plants (not built yet)
 - `main.py` — routes
+
+## How a request flows
+`/docs` → route in `main.py` → repository function → Postgres → back to the route
+→ schema turns it into the JSON reply.
+
+- **Repository functions take the session as a parameter.** The route opens it,
+  the repository only uses it.
+- **Routes open the session with `with SessionLocal() as session:`.** It closes
+  automatically, even on a crash. Without closing, every request leaks a DB connection.
+- **`session.refresh(obj)` after `commit()`.** Commit wipes the loaded values; refresh
+  reloads them (incl. the new `id`) while the session is still open. Without it:
+  `DetachedInstanceError` when FastAPI reads the object after the session is gone.
+- **Schemas separate from models**, even though they look the same for species now.
+  They will differ later (e.g. password hash never sent back; input has no `id`).
+  SQLModel (one class for both) was considered, not used.
+- **Schemas need `model_config = ConfigDict(from_attributes=True)`** so Pydantic can
+  read DB objects (`obj.name`), not only dicts.
+- **Don't use a DB model as return type** (`-> Species`): FastAPI crashes on startup.
+  Use the schema (`-> SpeciesOut`).
+- Route inputs are query parameters for now.
 
 ## Data model
 - Tables: `users`, `species`, `plants`, `care_events`
@@ -48,6 +70,9 @@
   Unit isn't stored; the backend derives it from the type.
   Open: `notes` field for extras like which fertilizer?
 - Build step by step: `species` first, then `plants`, then the rest.
+  Species first because `plants.species_id` needs an existing species.
+- Species data is entered by hand for now (via `/docs`), filled in batches later.
+  Gemini just produces data and calls the same `create_species` later.
 
 ## Features
 - Gemini identifies the species and fills in its needs.
