@@ -1,11 +1,14 @@
 """Database setup/config"""
 
+import os
+
+from dotenv import load_dotenv
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-PASSWORD = "QFbqDDpXRmPTCFtx8f9kh8jl" # ENV here later!
+load_dotenv()
 
-DB_URL = f"postgresql+pg8000://plants:{PASSWORD}@localhost:5432/plants" # can also live in env or seperate config
+DB_URL = os.environ["DB_URL"]
 
 db_engine = create_engine(DB_URL)
 
