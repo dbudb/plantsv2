@@ -1,6 +1,7 @@
 from datetime import datetime
 
 from fastapi import FastAPI, HTTPException
+from sqlalchemy import select
 
 from db import SessionLocal
 from species_repository import create_species, read_species, delete_species
@@ -101,6 +102,11 @@ def add_species(
 @app.delete("/species/{species_id}")
 def remove_species(species_id: int) -> SpeciesOut:
     with SessionLocal() as session:
+        has_plants = session.scalars(
+            select(Plant).where(Plant.species_id == species_id)
+        ).first()
+        if has_plants:
+            raise HTTPException(status_code=409, detail="species still has plants")
         species = delete_species(session, species_id)
         if species is None:
             raise HTTPException(status_code=404)
