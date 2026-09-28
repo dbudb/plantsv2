@@ -37,7 +37,6 @@
   `DetachedInstanceError` when FastAPI reads the object after the session is gone.
 - **Schemas separate from models**, even though they look the same for species now.
   They will differ later (e.g. password hash never sent back; input has no `id`).
-  SQLModel (one class for both) was considered, not used.
 - **Schemas need `model_config = ConfigDict(from_attributes=True)`** so Pydantic can
   read DB objects (`obj.name`), not only dicts.
 - **Don't use a DB model as return type** (`-> Species`): FastAPI crashes on startup.
