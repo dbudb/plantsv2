@@ -1,9 +1,17 @@
+from datetime import datetime
+
 from fastapi import FastAPI, HTTPException
 
 from db import SessionLocal
 from species_repository import create_species, read_species, delete_species
 from plant_repository import create_plant, read_plant, delete_plant
-from schemas import SpeciesOut, PlantOut
+from care_event_repository import (
+    create_care_event,
+    read_care_events,
+    delete_care_event,
+)
+from models import EventType, Plant
+from schemas import SpeciesOut, PlantOut, CareEventOut
 
 print("file loading")
 app = FastAPI()
@@ -38,6 +46,39 @@ def remove_plant(plant_id: int) -> PlantOut:
         if plant is None:
             raise HTTPException(status_code=404)
         return plant
+
+
+@app.get("/plants/{plant_id}/events")
+def get_care_events(plant_id: int) -> list[CareEventOut]:
+    with SessionLocal() as session:
+        care_events = read_care_events(session, plant_id)
+    return care_events
+
+
+@app.post("/plants/{plant_id}/events")
+def add_care_event(
+    plant_id: int,
+    event_type: EventType,
+    timestamp: datetime,
+    amount: float | None = None,
+    notes: str | None = None,
+) -> CareEventOut:
+    with SessionLocal() as session:
+        if session.get(Plant, plant_id) is None:
+            raise HTTPException(status_code=404)
+        care_event = create_care_event(
+            session, plant_id, event_type, amount, timestamp, notes
+        )
+    return care_event
+
+
+@app.delete("/events/{event_id}")
+def remove_care_event(event_id: int) -> CareEventOut:
+    with SessionLocal() as session:
+        care_event = delete_care_event(session, event_id)
+        if care_event is None:
+            raise HTTPException(status_code=404)
+        return care_event
 
 
 @app.get("/species")

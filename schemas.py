@@ -3,6 +3,8 @@
 from datetime import datetime
 from pydantic import BaseModel, ConfigDict
 
+from models import EventType
+
 class SpeciesOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     id: int
@@ -19,3 +21,13 @@ class PlantOut(BaseModel):
     name: str
     location: str
     created_at: datetime
+
+
+class CareEventOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+    plant_id: int
+    event_type: EventType
+    amount: float | None
+    timestamp: datetime
+    notes: str | None

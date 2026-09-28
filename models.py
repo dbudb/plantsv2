@@ -55,3 +55,4 @@ class CareEvent(Base):
     )
     amount: Mapped[float | None] = mapped_column()
     timestamp: Mapped[datetime] = mapped_column()
+    notes: Mapped[str | None] = mapped_column()
