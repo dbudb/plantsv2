@@ -4,14 +4,20 @@ from fastapi import FastAPI, HTTPException
 from sqlalchemy import select
 
 from db import SessionLocal
-from species_repository import create_species, read_species, delete_species
-from plant_repository import create_plant, read_plant, delete_plant
+from species_repository import (
+    create_species,
+    read_species,
+    update_species,
+    delete_species,
+)
+from plant_repository import create_plant, read_plant, update_plant, delete_plant
 from care_event_repository import (
     create_care_event,
     read_care_events,
+    update_care_event,
     delete_care_event,
 )
-from models import EventType, Plant
+from models import EventType, Plant, Species
 from schemas import SpeciesOut, PlantOut, CareEventOut
 
 print("file loading")
@@ -38,6 +44,22 @@ def add_plant(species_id: int, name: str, location: str) -> PlantOut:
     with SessionLocal() as session:
         plant = create_plant(session, species_id, name, location)
     return plant
+
+
+@app.patch("/plants/{plant_id}")
+def change_plant(
+    plant_id: int,
+    species_id: int | None = None,
+    name: str | None = None,
+    location: str | None = None,
+) -> PlantOut:
+    with SessionLocal() as session:
+        if species_id is not None and session.get(Species, species_id) is None:
+            raise HTTPException(status_code=404, detail="species not found")
+        plant = update_plant(session, plant_id, species_id, name, location)
+        if plant is None:
+            raise HTTPException(status_code=404)
+        return plant
 
 
 @app.delete("/plants/{plant_id}")
@@ -73,6 +95,23 @@ def add_care_event(
     return care_event
 
 
+@app.patch("/events/{event_id}")
+def change_care_event(
+    event_id: int,
+    event_type: EventType | None = None,
+    timestamp: datetime | None = None,
+    amount: float | None = None,
+    notes: str | None = None,
+) -> CareEventOut:
+    with SessionLocal() as session:
+        care_event = update_care_event(
+            session, event_id, event_type, amount, timestamp, notes
+        )
+        if care_event is None:
+            raise HTTPException(status_code=404)
+        return care_event
+
+
 @app.delete("/events/{event_id}")
 def remove_care_event(event_id: int) -> CareEventOut:
     with SessionLocal() as session:
@@ -97,6 +136,23 @@ def add_species(
     with SessionLocal() as session:
         species = create_species(session, name, watering_interval, min_dli, max_dli)
     return species
+
+
+@app.patch("/species/{species_id}")
+def change_species(
+    species_id: int,
+    name: str | None = None,
+    watering_interval: int | None = None,
+    min_dli: float | None = None,
+    max_dli: float | None = None,
+) -> SpeciesOut:
+    with SessionLocal() as session:
+        species = update_species(
+            session, species_id, name, watering_interval, min_dli, max_dli
+        )
+        if species is None:
+            raise HTTPException(status_code=404)
+        return species
 
 
 @app.delete("/species/{species_id}")

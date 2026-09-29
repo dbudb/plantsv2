@@ -31,3 +31,19 @@ def delete_care_event(session, event_id: int):
     session.delete(care_event)
     session.commit()
     return care_event
+
+def update_care_event(session, event_id: int, event_type, amount, timestamp, notes):
+    care_event = session.get(CareEvent, event_id)
+    if care_event is None:
+        return None
+    if event_type is not None:
+        care_event.event_type = event_type
+    if amount is not None:
+        care_event.amount = amount
+    if timestamp is not None:
+        care_event.timestamp = timestamp
+    if notes is not None:
+        care_event.notes = notes
+    session.commit()
+    session.refresh(care_event)
+    return care_event

@@ -22,3 +22,18 @@ def delete_species(session, species_id: int):
     session.delete(species)
     session.commit()
     return species
+def update_species(session, species_id: int, name, watering_interval, min_dli, max_dli):
+    species = session.get(Species, species_id)
+    if species is None:
+        return None
+    if name is not None:
+        species.name = name
+    if watering_interval is not None:
+        species.watering_interval = watering_interval
+    if min_dli is not None:
+        species.min_dli = min_dli
+    if max_dli is not None:
+        species.max_dli = max_dli
+    session.commit()
+    session.refresh(species)
+    return species
