@@ -10,6 +10,16 @@ class Base(DeclarativeBase):
     pass
 
 
+class User(Base):
+    """Defines a user."""
+
+    __tablename__ = "users"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    email: Mapped[str] = mapped_column(unique=True)
+    name: Mapped[str] = mapped_column()
+    password_hash: Mapped[str] = mapped_column()
+
+
 class Species(Base):
     """Defines a species."""
 
