@@ -29,8 +29,8 @@ from care_event_repository import (
     delete_care_event,
 )
 from user_repository import create_user, read_user_by_email
-from auth import create_token, hash_password, verify_password
-from models import EventType, Plant, Species
+from auth import create_token, get_current_user, hash_password, verify_password
+from models import EventType, Plant, Species, User
 from schemas import UserOut, SpeciesOut, PlantOut, CareEventOut
 
 print("file loading")
@@ -65,6 +65,11 @@ def login(form: Annotated[OAuth2PasswordRequestForm, Depends()]):
     if user is None or not verify_password(form.password, user.password_hash):
         raise HTTPException(status_code=401, detail="wrong email or password")
     return {"access_token": create_token(user.id), "token_type": "bearer"}
+
+
+@app.get("/me")
+def me(user: Annotated[User, Depends(get_current_user)]) -> UserOut:
+    return user
 
 
 @app.get("/plants")
