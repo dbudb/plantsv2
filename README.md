@@ -17,7 +17,10 @@ Built with FastAPI, SQLAlchemy, Alembic and PostgreSQL.
 2. Create a PostgreSQL database and a `.env` file in the project root:
    ```
    DB_URL=postgresql+pg8000://USER:PASSWORD@localhost:5432/DB_NAME
+   SECRET_KEY=any-long-random-string
    ```
+   `SECRET_KEY` signs the login tokens. Generate one with
+   `python -c "import secrets; print(secrets.token_hex(32))"`.
 
 3. Create the tables:
    ```

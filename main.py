@@ -2,7 +2,8 @@ from datetime import datetime
 
 from typing import Annotated
 
-from fastapi import FastAPI, Form, HTTPException
+from fastapi import Depends, FastAPI, Form, HTTPException
+from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy import select
 
 from db import SessionLocal
@@ -28,7 +29,7 @@ from care_event_repository import (
     delete_care_event,
 )
 from user_repository import create_user, read_user_by_email
-from auth import hash_password
+from auth import create_token, hash_password, verify_password
 from models import EventType, Plant, Species
 from schemas import UserOut, SpeciesOut, PlantOut, CareEventOut
 
@@ -55,6 +56,15 @@ def signup(
             raise HTTPException(status_code=409, detail="email already registered")
         user = create_user(session, email, name, hash_password(password))
     return user
+
+
+@app.post("/login")
+def login(form: Annotated[OAuth2PasswordRequestForm, Depends()]):
+    with SessionLocal() as session:
+        user = read_user_by_email(session, form.username)
+    if user is None or not verify_password(form.password, user.password_hash):
+        raise HTTPException(status_code=401, detail="wrong email or password")
+    return {"access_token": create_token(user.id), "token_type": "bearer"}
 
 
 @app.get("/plants")
