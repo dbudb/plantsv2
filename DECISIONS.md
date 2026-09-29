@@ -8,8 +8,8 @@
 - DB password in code for now, move to `.env` later.
 
 ## Before the first push (to-do)
-- [ ] Move the DB URL into `.env`, add `.env` to `.gitignore`, `db.py` reads it from there.
-- [ ] Give the DB a new password (the old one is in the git history).
+- [x] Move the DB URL into `.env`, add `.env` to `.gitignore`, `db.py` reads it from there.
+- [x] Give the DB a new password (the old one is in the git history).
 - [ ] One clean initial migration, un-ignore `alembic/versions/`, commit it.
 
 - **Migrations while developing:** `alembic/versions/` is in `.gitignore` for now.
