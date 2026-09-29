@@ -24,6 +24,9 @@ def read_care_events(session, plant_id: int):
         .order_by(CareEvent.timestamp)
     ).all()
 
+def read_one_care_event(session, event_id: int):
+    return session.get(CareEvent, event_id)
+
 def delete_care_event(session, event_id: int):
     care_event = session.get(CareEvent, event_id)
     if care_event is None:

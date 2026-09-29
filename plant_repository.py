@@ -14,6 +14,9 @@ def create_plant(session, species_id, name, location):
 def read_plant(session):
     return session.scalars(select(Plant)).all()
 
+def read_one_plant(session, plant_id: int):
+    return session.get(Plant, plant_id)
+
 def delete_plant(session, plant_id: int):
     plant = session.get(Plant, plant_id)
     if plant is None:

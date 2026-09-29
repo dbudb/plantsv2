@@ -15,6 +15,9 @@ def create_species(session, name, watering_interval, min_dli, max_dli):
 def read_species(session):
     return session.scalars(select(Species)).all()
 
+def read_one_species(session, species_id: int):
+    return session.get(Species, species_id)
+
 def delete_species(session, species_id: int):
     species = session.get(Species, species_id)
     if species is None:
@@ -22,6 +25,7 @@ def delete_species(session, species_id: int):
     session.delete(species)
     session.commit()
     return species
+
 def update_species(session, species_id: int, name, watering_interval, min_dli, max_dli):
     species = session.get(Species, species_id)
     if species is None:

@@ -7,13 +7,21 @@ from db import SessionLocal
 from species_repository import (
     create_species,
     read_species,
+    read_one_species,
     update_species,
     delete_species,
 )
-from plant_repository import create_plant, read_plant, update_plant, delete_plant
+from plant_repository import (
+    create_plant,
+    read_plant,
+    read_one_plant,
+    update_plant,
+    delete_plant,
+)
 from care_event_repository import (
     create_care_event,
     read_care_events,
+    read_one_care_event,
     update_care_event,
     delete_care_event,
 )
@@ -44,6 +52,15 @@ def add_plant(species_id: int, name: str, location: str) -> PlantOut:
     with SessionLocal() as session:
         plant = create_plant(session, species_id, name, location)
     return plant
+
+
+@app.get("/plants/{plant_id}")
+def get_plant(plant_id: int) -> PlantOut:
+    with SessionLocal() as session:
+        plant = read_one_plant(session, plant_id)
+        if plant is None:
+            raise HTTPException(status_code=404)
+        return plant
 
 
 @app.patch("/plants/{plant_id}")
@@ -95,6 +112,15 @@ def add_care_event(
     return care_event
 
 
+@app.get("/events/{event_id}")
+def get_care_event(event_id: int) -> CareEventOut:
+    with SessionLocal() as session:
+        care_event = read_one_care_event(session, event_id)
+        if care_event is None:
+            raise HTTPException(status_code=404)
+        return care_event
+
+
 @app.patch("/events/{event_id}")
 def change_care_event(
     event_id: int,
@@ -136,6 +162,15 @@ def add_species(
     with SessionLocal() as session:
         species = create_species(session, name, watering_interval, min_dli, max_dli)
     return species
+
+
+@app.get("/species/{species_id}")
+def get_one_species(species_id: int) -> SpeciesOut:
+    with SessionLocal() as session:
+        species = read_one_species(session, species_id)
+        if species is None:
+            raise HTTPException(status_code=404)
+        return species
 
 
 @app.patch("/species/{species_id}")
