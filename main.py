@@ -1,6 +1,8 @@
 from datetime import datetime
 
-from fastapi import FastAPI, HTTPException
+from typing import Annotated
+
+from fastapi import FastAPI, Form, HTTPException
 from sqlalchemy import select
 
 from db import SessionLocal
@@ -25,8 +27,10 @@ from care_event_repository import (
     update_care_event,
     delete_care_event,
 )
+from user_repository import create_user, read_user_by_email
+from auth import hash_password
 from models import EventType, Plant, Species
-from schemas import SpeciesOut, PlantOut, CareEventOut
+from schemas import UserOut, SpeciesOut, PlantOut, CareEventOut
 
 print("file loading")
 app = FastAPI()
@@ -38,6 +42,19 @@ def hello():
 
 
 print("hello registered")
+
+
+@app.post("/signup")
+def signup(
+    email: Annotated[str, Form()],
+    name: Annotated[str, Form()],
+    password: Annotated[str, Form()],
+) -> UserOut:
+    with SessionLocal() as session:
+        if read_user_by_email(session, email) is not None:
+            raise HTTPException(status_code=409, detail="email already registered")
+        user = create_user(session, email, name, hash_password(password))
+    return user
 
 
 @app.get("/plants")
