@@ -43,3 +43,6 @@ def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]) -> User:
     if user is None:
         raise HTTPException(status_code=401, detail="invalid token")
     return user
+
+
+CurrentUser = Annotated[User, Depends(get_current_user)]

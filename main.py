@@ -29,8 +29,14 @@ from care_event_repository import (
     delete_care_event,
 )
 from user_repository import create_user, read_user_by_email
-from auth import create_token, get_current_user, hash_password, verify_password
-from models import EventType, Plant, Species, User
+from auth import (
+    CurrentUser,
+    create_token,
+    get_current_user,
+    hash_password,
+    verify_password,
+)
+from models import EventType, Plant, Species
 from schemas import UserOut, SpeciesOut, PlantOut, CareEventOut
 
 print("file loading")
@@ -68,28 +74,30 @@ def login(form: Annotated[OAuth2PasswordRequestForm, Depends()]):
 
 
 @app.get("/me")
-def me(user: Annotated[User, Depends(get_current_user)]) -> UserOut:
+def me(user: CurrentUser) -> UserOut:
     return user
 
 
 @app.get("/plants")
-def get_plants() -> list[PlantOut]:
+def get_plants(user: CurrentUser) -> list[PlantOut]:
     with SessionLocal() as session:
-        plants = read_plant(session)
+        plants = read_plant(session, user.id)
     return plants
 
 
 @app.post("/plants")
-def add_plant(species_id: int, name: str, location: str) -> PlantOut:
+def add_plant(
+    user: CurrentUser, species_id: int, name: str, location: str
+) -> PlantOut:
     with SessionLocal() as session:
-        plant = create_plant(session, species_id, name, location)
+        plant = create_plant(session, user.id, species_id, name, location)
     return plant
 
 
 @app.get("/plants/{plant_id}")
-def get_plant(plant_id: int) -> PlantOut:
+def get_plant(user: CurrentUser, plant_id: int) -> PlantOut:
     with SessionLocal() as session:
-        plant = read_one_plant(session, plant_id)
+        plant = read_one_plant(session, plant_id, user.id)
         if plant is None:
             raise HTTPException(status_code=404)
         return plant
@@ -97,38 +105,42 @@ def get_plant(plant_id: int) -> PlantOut:
 
 @app.patch("/plants/{plant_id}")
 def change_plant(
+    user: CurrentUser,
     plant_id: int,
     species_id: int | None = None,
     name: str | None = None,
     location: str | None = None,
 ) -> PlantOut:
     with SessionLocal() as session:
+        if read_one_plant(session, plant_id, user.id) is None:
+            raise HTTPException(status_code=404)
         if species_id is not None and session.get(Species, species_id) is None:
             raise HTTPException(status_code=404, detail="species not found")
         plant = update_plant(session, plant_id, species_id, name, location)
-        if plant is None:
-            raise HTTPException(status_code=404)
         return plant
 
 
 @app.delete("/plants/{plant_id}")
-def remove_plant(plant_id: int) -> PlantOut:
+def remove_plant(user: CurrentUser, plant_id: int) -> PlantOut:
     with SessionLocal() as session:
-        plant = delete_plant(session, plant_id)
-        if plant is None:
+        if read_one_plant(session, plant_id, user.id) is None:
             raise HTTPException(status_code=404)
+        plant = delete_plant(session, plant_id)
         return plant
 
 
 @app.get("/plants/{plant_id}/events")
-def get_care_events(plant_id: int) -> list[CareEventOut]:
+def get_care_events(user: CurrentUser, plant_id: int) -> list[CareEventOut]:
     with SessionLocal() as session:
+        if read_one_plant(session, plant_id, user.id) is None:
+            raise HTTPException(status_code=404)
         care_events = read_care_events(session, plant_id)
     return care_events
 
 
 @app.post("/plants/{plant_id}/events")
 def add_care_event(
+    user: CurrentUser,
     plant_id: int,
     event_type: EventType,
     timestamp: datetime,
@@ -136,7 +148,7 @@ def add_care_event(
     notes: str | None = None,
 ) -> CareEventOut:
     with SessionLocal() as session:
-        if session.get(Plant, plant_id) is None:
+        if read_one_plant(session, plant_id, user.id) is None:
             raise HTTPException(status_code=404)
         care_event = create_care_event(
             session, plant_id, event_type, amount, timestamp, notes
@@ -145,9 +157,9 @@ def add_care_event(
 
 
 @app.get("/events/{event_id}")
-def get_care_event(event_id: int) -> CareEventOut:
+def get_care_event(user: CurrentUser, event_id: int) -> CareEventOut:
     with SessionLocal() as session:
-        care_event = read_one_care_event(session, event_id)
+        care_event = read_one_care_event(session, event_id, user.id)
         if care_event is None:
             raise HTTPException(status_code=404)
         return care_event
@@ -155,6 +167,7 @@ def get_care_event(event_id: int) -> CareEventOut:
 
 @app.patch("/events/{event_id}")
 def change_care_event(
+    user: CurrentUser,
     event_id: int,
     event_type: EventType | None = None,
     timestamp: datetime | None = None,
@@ -162,24 +175,24 @@ def change_care_event(
     notes: str | None = None,
 ) -> CareEventOut:
     with SessionLocal() as session:
+        if read_one_care_event(session, event_id, user.id) is None:
+            raise HTTPException(status_code=404)
         care_event = update_care_event(
             session, event_id, event_type, amount, timestamp, notes
         )
-        if care_event is None:
-            raise HTTPException(status_code=404)
         return care_event
 
 
 @app.delete("/events/{event_id}")
-def remove_care_event(event_id: int) -> CareEventOut:
+def remove_care_event(user: CurrentUser, event_id: int) -> CareEventOut:
     with SessionLocal() as session:
-        care_event = delete_care_event(session, event_id)
-        if care_event is None:
+        if read_one_care_event(session, event_id, user.id) is None:
             raise HTTPException(status_code=404)
+        care_event = delete_care_event(session, event_id)
         return care_event
 
 
-@app.get("/species")
+@app.get("/species", dependencies=[Depends(get_current_user)])
 def get_species() -> list[SpeciesOut]:
 
     with SessionLocal() as session:
@@ -187,7 +200,7 @@ def get_species() -> list[SpeciesOut]:
     return species
 
 
-@app.post("/species")
+@app.post("/species", dependencies=[Depends(get_current_user)])
 def add_species(
     name: str, watering_interval: int, min_dli: float, max_dli: float
 ) -> SpeciesOut:
@@ -196,7 +209,7 @@ def add_species(
     return species
 
 
-@app.get("/species/{species_id}")
+@app.get("/species/{species_id}", dependencies=[Depends(get_current_user)])
 def get_one_species(species_id: int) -> SpeciesOut:
     with SessionLocal() as session:
         species = read_one_species(session, species_id)
@@ -205,7 +218,7 @@ def get_one_species(species_id: int) -> SpeciesOut:
         return species
 
 
-@app.patch("/species/{species_id}")
+@app.patch("/species/{species_id}", dependencies=[Depends(get_current_user)])
 def change_species(
     species_id: int,
     name: str | None = None,
@@ -222,7 +235,7 @@ def change_species(
         return species
 
 
-@app.delete("/species/{species_id}")
+@app.delete("/species/{species_id}", dependencies=[Depends(get_current_user)])
 def remove_species(species_id: int) -> SpeciesOut:
     with SessionLocal() as session:
         has_plants = session.scalars(

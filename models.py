@@ -36,6 +36,7 @@ class Plant(Base):
 
     __tablename__ = "plants"
     id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
     species_id: Mapped[int] = mapped_column(ForeignKey("species.id"))
     name: Mapped[str] = mapped_column()
     location: Mapped[str] = mapped_column()

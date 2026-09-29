@@ -24,6 +24,7 @@ class SpeciesOut(BaseModel):
 class PlantOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     id: int
+    user_id: int
     species_id: int
     name: str
     location: str

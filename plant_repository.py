@@ -4,18 +4,21 @@ from models import CareEvent, Plant
 from sqlalchemy import delete, select
 
 
-def create_plant(session, species_id, name, location):
-    plant = Plant(species_id=species_id, name=name, location=location)
+def create_plant(session, user_id, species_id, name, location):
+    plant = Plant(user_id=user_id, species_id=species_id, name=name, location=location)
     session.add(plant)
     session.commit()
     session.refresh(plant)
     return plant
 
-def read_plant(session):
-    return session.scalars(select(Plant)).all()
+def read_plant(session, user_id: int):
+    return session.scalars(select(Plant).where(Plant.user_id == user_id)).all()
 
-def read_one_plant(session, plant_id: int):
-    return session.get(Plant, plant_id)
+def read_one_plant(session, plant_id: int, user_id: int):
+    plant = session.get(Plant, plant_id)
+    if plant is None or plant.user_id != user_id:
+        return None
+    return plant
 
 def delete_plant(session, plant_id: int):
     plant = session.get(Plant, plant_id)
