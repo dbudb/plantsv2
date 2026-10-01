@@ -10,11 +10,10 @@
 ## Before the first push (to-do)
 - [x] Move the DB URL into `.env`, add `.env` to `.gitignore`, `db.py` reads it from there.
 - [x] Give the DB a new password (the old one is in the git history).
-- [ ] One clean initial migration, un-ignore `alembic/versions/`, commit it.
+- [x] One clean initial migration, un-ignore `alembic/versions/`, commit it.
 
-- **Migrations while developing:** `alembic/versions/` is in `.gitignore` for now.
-  Before the first push: generate ONE clean initial migration, remove the line
-  from `.gitignore`, commit it. After pushing, never edit a migration, only add new ones.
+- **Migrations:** `alembic/versions/` is in git, starting with one clean initial
+  migration. After pushing, never edit a migration, only add new ones.
 
 ## Structure (repository pattern)
 - `db.py` — connection (engine, SessionLocal)

@@ -3,5 +3,4 @@ __pycache__/
 .idea
 CLAUDE.md
 .claude/
-alembic/versions
 .env
