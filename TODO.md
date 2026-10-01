@@ -7,7 +7,7 @@
 - [ ] **Migrations:** one clean initial migration, remove `alembic/versions` from
       `.gitignore`, commit it (see DECISIONS.md). Without it, `alembic upgrade head`
       fails after a clone and on the server.
-- [ ] **Push:** local master is 6 commits ahead of GitHub. Push after the migrations.
+- [x] **Push:** master is in sync with GitHub. Push again after the migrations.
 - [ ] **Deploy** on Render/Vercel with env vars (`DB_URL`, `SECRET_KEY`) and a build pipeline.
 - [ ] **README:** add the endpoint list and the live URL after deploying.
 - [ ] **Notion page:** fill in "Datenbank Schema", "Bereitgestellte App-URL",
