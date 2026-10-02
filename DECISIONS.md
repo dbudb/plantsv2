@@ -18,14 +18,14 @@
 ## Structure (repository pattern)
 - `db.py` — connection (engine, SessionLocal)
 - `models.py` — tables (how data is **stored**)
-- `schemas.py` — Pydantic models (what the API **sends back**, later also receives)
+- `schemas.py` — Pydantic models (what the API **receives** and **sends back**)
 - `species_repository.py` — all DB functions for species
 - `plant_repository.py` — all DB functions for plants (not built yet)
 - `main.py` — routes
 
 ## How a request flows
-`/docs` → route in `main.py` → repository function → Postgres → back to the route
-→ schema turns it into the JSON reply.
+`/docs` → input class in `schemas.py` checks the JSON body → route in `main.py`
+→ repository function → Postgres → back to the route → schema turns it into the JSON reply.
 
 - **Repository functions take the session as a parameter.** The route opens it,
   the repository only uses it.
@@ -40,7 +40,27 @@
   read DB objects (`obj.name`), not only dicts.
 - **Don't use a DB model as return type** (`-> Species`): FastAPI crashes on startup.
   Use the schema (`-> SpeciesOut`).
-- Route inputs are query parameters for now.
+- Route inputs are JSON bodies, checked by input classes in `schemas.py`
+  (`...In` for create, `...Update` for PATCH). Login stays a form: the Authorize
+  button in `/docs` needs it.
+
+## Validation
+- An input class checks the body **before** the route runs. A broken rule answers 422
+  and nothing is saved.
+- **Each rule is written once** as a named type at the top of `schemas.py` and reused:
+  `NonEmptyText` (trimmed, at least 1 character), `AboveZero`, `ZeroOrMore` (no `inf`/`nan`).
+- Rules:
+  - species name, plant name, plant location, user name: not empty; only spaces counts
+    as empty; spaces around the value are cut off
+  - `watering_interval`: bigger than 0
+  - `min_dli`, `max_dli`, care event `amount`: 0 or bigger
+  - `min_dli` not bigger than `max_dli`. On create the class checks it. On PATCH the
+    route checks it against the stored values, because a class can't look into the DB.
+  - plant `species_id`: the species must exist (404 "species not found")
+  - signup: valid email (`EmailStr`, package `email-validator`), password at least 8 characters
+- **Emails are lowercase everywhere:** signup saves lowercase, login lowercases what was typed.
+- PATCH: a field that is missing or `null` stays unchanged.
+- Unknown fields in a body are ignored (Pydantic default).
 
 ## Data model
 - Tables: `users`, `species`, `plants`, `care_events`

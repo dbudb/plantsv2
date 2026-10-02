@@ -1,7 +1,7 @@
 # To-do (MVP check against Notion, 2026-09-29)
 
 ## Missing for the MVP
-- [ ] **Validation:** add value rules to the inputs (negative/empty values,
+- [x] **Validation:** add value rules to the inputs (negative/empty values,
       `min_dli` bigger than `max_dli`, ...). Check what `POST /plants` does with a
       `species_id` that doesn't exist; compare with `PATCH /plants`.
 - [x] **Migrations:** one clean initial migration, remove `alembic/versions` from
