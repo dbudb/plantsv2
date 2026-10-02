@@ -21,6 +21,7 @@
 - `schemas.py` — Pydantic models (what the API **receives** and **sends back**)
 - `species_repository.py` — all DB functions for species
 - `plant_repository.py` — all DB functions for plants (not built yet)
+- `gemini.py` — asks Gemini for species data (not built yet)
 - `main.py` — routes
 
 ## How a request flows
@@ -66,6 +67,9 @@
 - Tables: `users`, `species`, `plants`, `care_events`
 - **Species** holds the needs: watering interval, sunlight, temperature.
   Why: all tomatoes need the same, so store it once.
+- **Species has two names:** `name` (common, e.g. "Tomate") and `botanical_name`
+  (e.g. "Solanum lycopersicum"). `botanical_name` is nullable, because old and
+  hand-made rows have none, and unique: one row per botanical name.
 - Sunlight is stored as **DLI** (Daily Light Integral, float). The backend derives
   shade / partial sun / full sun from it; the user can see both, or enter a measured DLI.
   Species stores a range: `min_dli` and `max_dli`.
@@ -91,6 +95,26 @@
   Species first because `plants.species_id` needs an existing species.
 - Species data is entered by hand for now (via `/docs`), filled in batches later.
   Gemini just produces data and calls the same `create_species` later.
+
+## Gemini species lookup (not built yet)
+- `POST /species/lookup` takes a typed name (`{"name": "Tomate"}`) and answers a
+  species. `POST /species` by hand stays. Photo input comes later as a second route.
+- **Gemini is only asked when the DB doesn't know the name.** Flow: search the DB →
+  miss: ask Gemini → search again with Gemini's botanical name → miss: `create_species`.
+- **The search ignores case** and checks `name` and `botanical_name`. The names keep
+  their capitals in the DB (unlike emails), because they are shown to users.
+- **Second search:** "tomato" and "Tomate" lead to the same botanical name. Then the
+  existing row is returned and nothing is saved.
+- `name` of a new species is Gemini's common name in the typed language, not the
+  typed text, so typos don't land in the DB.
+- Gemini answers as structured JSON (package `google-genai`, code in `gemini.py`,
+  key in `.env` as `GEMINI_API_KEY`). It is told the units: watering interval in
+  days, DLI in mol/m²/day.
+- Gemini's data goes through `SpeciesIn`, so the same rules apply as for hand-made species.
+- Errors: not a plant → 404 "species not found". Gemini unreachable, out of quota or
+  its answer breaks the rules → 502. Nothing is saved in both cases.
+- Open: old rows without a botanical name can get a twin. `POST /species` by hand
+  with an existing botanical name answers 500 until it gets a 409 check.
 
 ## Features
 - Gemini identifies the species and fills in its needs.
