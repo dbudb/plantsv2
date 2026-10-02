@@ -71,6 +71,20 @@ class PlantOut(BaseModel):
     created_at: datetime
 
 
+class CareEventIn(BaseModel):
+    event_type: EventType
+    timestamp: datetime
+    amount: ZeroOrMore | None = None
+    notes: str | None = None
+
+
+class CareEventUpdate(BaseModel):
+    event_type: EventType | None = None
+    timestamp: datetime | None = None
+    amount: ZeroOrMore | None = None
+    notes: str | None = None
+
+
 class CareEventOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     id: int

@@ -1,5 +1,3 @@
-from datetime import datetime
-
 from typing import Annotated
 
 from fastapi import Depends, FastAPI, Form, HTTPException
@@ -36,7 +34,7 @@ from auth import (
     hash_password,
     verify_password,
 )
-from models import EventType, Plant, Species
+from models import Plant, Species
 from schemas import (
     UserOut,
     SpeciesIn,
@@ -45,6 +43,8 @@ from schemas import (
     PlantIn,
     PlantUpdate,
     PlantOut,
+    CareEventIn,
+    CareEventUpdate,
     CareEventOut,
 )
 
@@ -150,19 +150,12 @@ def get_care_events(user: CurrentUser, plant_id: int) -> list[CareEventOut]:
 
 
 @app.post("/plants/{plant_id}/events")
-def add_care_event(
-    user: CurrentUser,
-    plant_id: int,
-    event_type: EventType,
-    timestamp: datetime,
-    amount: float | None = None,
-    notes: str | None = None,
-) -> CareEventOut:
+def add_care_event(user: CurrentUser, plant_id: int, data: CareEventIn) -> CareEventOut:
     with SessionLocal() as session:
         if read_one_plant(session, plant_id, user.id) is None:
             raise HTTPException(status_code=404)
         care_event = create_care_event(
-            session, plant_id, event_type, amount, timestamp, notes
+            session, plant_id, data.event_type, data.amount, data.timestamp, data.notes
         )
     return care_event
 
@@ -178,18 +171,13 @@ def get_care_event(user: CurrentUser, event_id: int) -> CareEventOut:
 
 @app.patch("/events/{event_id}")
 def change_care_event(
-    user: CurrentUser,
-    event_id: int,
-    event_type: EventType | None = None,
-    timestamp: datetime | None = None,
-    amount: float | None = None,
-    notes: str | None = None,
+    user: CurrentUser, event_id: int, data: CareEventUpdate
 ) -> CareEventOut:
     with SessionLocal() as session:
         if read_one_care_event(session, event_id, user.id) is None:
             raise HTTPException(status_code=404)
         care_event = update_care_event(
-            session, event_id, event_type, amount, timestamp, notes
+            session, event_id, data.event_type, data.amount, data.timestamp, data.notes
         )
         return care_event
 
