@@ -37,7 +37,14 @@ from auth import (
     verify_password,
 )
 from models import EventType, Plant, Species
-from schemas import UserOut, SpeciesIn, SpeciesOut, PlantOut, CareEventOut
+from schemas import (
+    UserOut,
+    SpeciesIn,
+    SpeciesUpdate,
+    SpeciesOut,
+    PlantOut,
+    CareEventOut,
+)
 
 print("file loading")
 app = FastAPI()
@@ -218,19 +225,25 @@ def get_one_species(species_id: int) -> SpeciesOut:
 
 
 @app.patch("/species/{species_id}", dependencies=[Depends(get_current_user)])
-def change_species(
-    species_id: int,
-    name: str | None = None,
-    watering_interval: int | None = None,
-    min_dli: float | None = None,
-    max_dli: float | None = None,
-) -> SpeciesOut:
+def change_species(species_id: int, data: SpeciesUpdate) -> SpeciesOut:
     with SessionLocal() as session:
-        species = update_species(
-            session, species_id, name, watering_interval, min_dli, max_dli
-        )
+        species = read_one_species(session, species_id)
         if species is None:
             raise HTTPException(status_code=404)
+        new_min = species.min_dli if data.min_dli is None else data.min_dli
+        new_max = species.max_dli if data.max_dli is None else data.max_dli
+        if new_min > new_max:
+            raise HTTPException(
+                status_code=422, detail="min_dli is bigger than max_dli"
+            )
+        species = update_species(
+            session,
+            species_id,
+            data.name,
+            data.watering_interval,
+            data.min_dli,
+            data.max_dli,
+        )
         return species
 
 

@@ -33,6 +33,13 @@ class SpeciesIn(BaseModel):
         return self
 
 
+class SpeciesUpdate(BaseModel):
+    name: NonEmptyText | None = None
+    watering_interval: AboveZero | None = None
+    min_dli: ZeroOrMore | None = None
+    max_dli: ZeroOrMore | None = None
+
+
 class SpeciesOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     id: int
