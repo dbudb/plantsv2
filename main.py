@@ -42,6 +42,8 @@ from schemas import (
     SpeciesIn,
     SpeciesUpdate,
     SpeciesOut,
+    PlantIn,
+    PlantUpdate,
     PlantOut,
     CareEventOut,
 )
@@ -94,9 +96,13 @@ def get_plants(user: CurrentUser) -> list[PlantOut]:
 
 
 @app.post("/plants")
-def add_plant(user: CurrentUser, species_id: int, name: str, location: str) -> PlantOut:
+def add_plant(user: CurrentUser, data: PlantIn) -> PlantOut:
     with SessionLocal() as session:
-        plant = create_plant(session, user.id, species_id, name, location)
+        if session.get(Species, data.species_id) is None:
+            raise HTTPException(status_code=404, detail="species not found")
+        plant = create_plant(
+            session, user.id, data.species_id, data.name, data.location
+        )
     return plant
 
 
@@ -110,19 +116,18 @@ def get_plant(user: CurrentUser, plant_id: int) -> PlantOut:
 
 
 @app.patch("/plants/{plant_id}")
-def change_plant(
-    user: CurrentUser,
-    plant_id: int,
-    species_id: int | None = None,
-    name: str | None = None,
-    location: str | None = None,
-) -> PlantOut:
+def change_plant(user: CurrentUser, plant_id: int, data: PlantUpdate) -> PlantOut:
     with SessionLocal() as session:
         if read_one_plant(session, plant_id, user.id) is None:
             raise HTTPException(status_code=404)
-        if species_id is not None and session.get(Species, species_id) is None:
+        if (
+            data.species_id is not None
+            and session.get(Species, data.species_id) is None
+        ):
             raise HTTPException(status_code=404, detail="species not found")
-        plant = update_plant(session, plant_id, species_id, name, location)
+        plant = update_plant(
+            session, plant_id, data.species_id, data.name, data.location
+        )
         return plant
 
 

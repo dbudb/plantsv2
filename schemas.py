@@ -49,6 +49,18 @@ class SpeciesOut(BaseModel):
     min_dli: float
 
 
+class PlantIn(BaseModel):
+    species_id: int
+    name: NonEmptyText
+    location: NonEmptyText
+
+
+class PlantUpdate(BaseModel):
+    species_id: int | None = None
+    name: NonEmptyText | None = None
+    location: NonEmptyText | None = None
+
+
 class PlantOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     id: int
