@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from fastapi import Depends, FastAPI, Form, HTTPException
+from fastapi import Depends, FastAPI, HTTPException
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy import select
 
@@ -36,6 +36,7 @@ from auth import (
 )
 from models import Plant, Species
 from schemas import (
+    UserIn,
     UserOut,
     SpeciesIn,
     SpeciesUpdate,
@@ -62,22 +63,19 @@ print("hello registered")
 
 
 @app.post("/signup")
-def signup(
-    email: Annotated[str, Form()],
-    name: Annotated[str, Form()],
-    password: Annotated[str, Form()],
-) -> UserOut:
+def signup(data: UserIn) -> UserOut:
+    email = data.email.lower()
     with SessionLocal() as session:
         if read_user_by_email(session, email) is not None:
             raise HTTPException(status_code=409, detail="email already registered")
-        user = create_user(session, email, name, hash_password(password))
+        user = create_user(session, email, data.name, hash_password(data.password))
     return user
 
 
 @app.post("/login")
 def login(form: Annotated[OAuth2PasswordRequestForm, Depends()]):
     with SessionLocal() as session:
-        user = read_user_by_email(session, form.username)
+        user = read_user_by_email(session, form.username.lower())
     if user is None or not verify_password(form.password, user.password_hash):
         raise HTTPException(status_code=401, detail="wrong email or password")
     return {"access_token": create_token(user.id), "token_type": "bearer"}

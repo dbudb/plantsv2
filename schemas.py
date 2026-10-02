@@ -1,9 +1,16 @@
-"""Defines what the API sends in it's HTTP response body."""
+"""Defines what the API receives and sends in its HTTP bodies."""
 
 from datetime import datetime
 from typing import Annotated
 
-from pydantic import BaseModel, ConfigDict, Field, StringConstraints, model_validator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    EmailStr,
+    Field,
+    StringConstraints,
+    model_validator,
+)
 
 from models import EventType
 
@@ -11,6 +18,12 @@ from models import EventType
 NonEmptyText = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)]
 AboveZero = Annotated[int, Field(gt=0)]
 ZeroOrMore = Annotated[float, Field(ge=0, allow_inf_nan=False)]
+
+
+class UserIn(BaseModel):
+    email: EmailStr
+    name: NonEmptyText
+    password: str = Field(min_length=8)
 
 
 class UserOut(BaseModel):
