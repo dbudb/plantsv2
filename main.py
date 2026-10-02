@@ -37,10 +37,11 @@ from auth import (
     verify_password,
 )
 from models import EventType, Plant, Species
-from schemas import UserOut, SpeciesOut, PlantOut, CareEventOut
+from schemas import UserOut, SpeciesIn, SpeciesOut, PlantOut, CareEventOut
 
 print("file loading")
 app = FastAPI()
+
 
 @app.get("/")
 def hello():
@@ -86,9 +87,7 @@ def get_plants(user: CurrentUser) -> list[PlantOut]:
 
 
 @app.post("/plants")
-def add_plant(
-    user: CurrentUser, species_id: int, name: str, location: str
-) -> PlantOut:
+def add_plant(user: CurrentUser, species_id: int, name: str, location: str) -> PlantOut:
     with SessionLocal() as session:
         plant = create_plant(session, user.id, species_id, name, location)
     return plant
@@ -201,11 +200,11 @@ def get_species() -> list[SpeciesOut]:
 
 
 @app.post("/species", dependencies=[Depends(get_current_user)])
-def add_species(
-    name: str, watering_interval: int, min_dli: float, max_dli: float
-) -> SpeciesOut:
+def add_species(data: SpeciesIn) -> SpeciesOut:
     with SessionLocal() as session:
-        species = create_species(session, name, watering_interval, min_dli, max_dli)
+        species = create_species(
+            session, data.name, data.watering_interval, data.min_dli, data.max_dli
+        )
     return species
 
 

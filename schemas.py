@@ -1,15 +1,36 @@
 """Defines what the API sends in it's HTTP response body."""
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict
+from typing import Annotated
+
+from pydantic import BaseModel, ConfigDict, Field, StringConstraints, model_validator
 
 from models import EventType
+
+# Rules, written once and reused by the input classes below.
+NonEmptyText = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)]
+AboveZero = Annotated[int, Field(gt=0)]
+ZeroOrMore = Annotated[float, Field(ge=0, allow_inf_nan=False)]
+
 
 class UserOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     id: int
     email: str
     name: str
+
+
+class SpeciesIn(BaseModel):
+    name: NonEmptyText
+    watering_interval: AboveZero
+    min_dli: ZeroOrMore
+    max_dli: ZeroOrMore
+
+    @model_validator(mode="after")
+    def check_dli_range(self):
+        if self.min_dli > self.max_dli:
+            raise ValueError("min_dli is bigger than max_dli")
+        return self
 
 
 class SpeciesOut(BaseModel):
