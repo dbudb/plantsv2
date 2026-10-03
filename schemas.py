@@ -35,6 +35,7 @@ class UserOut(BaseModel):
 
 class SpeciesIn(BaseModel):
     name: NonEmptyText
+    botanical_name: NonEmptyText | None = None
     watering_interval: AboveZero
     min_dli: ZeroOrMore
     max_dli: ZeroOrMore
@@ -53,10 +54,15 @@ class SpeciesUpdate(BaseModel):
     max_dli: ZeroOrMore | None = None
 
 
+class SpeciesLookup(BaseModel):
+    name: NonEmptyText
+
+
 class SpeciesOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     id: int
     name: str
+    botanical_name: str | None
     watering_interval: int
     max_dli: float
     min_dli: float
