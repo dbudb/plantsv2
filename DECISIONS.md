@@ -21,7 +21,7 @@
 - `schemas.py` — Pydantic models (what the API **receives** and **sends back**)
 - `species_repository.py` — all DB functions for species
 - `plant_repository.py` — all DB functions for plants (not built yet)
-- `gemini.py` — asks Gemini for species data (not built yet)
+- `gemini.py` — asks Gemini for species data
 - `main.py` — routes
 
 ## How a request flows
@@ -96,7 +96,7 @@
 - Species data is entered by hand for now (via `/docs`), filled in batches later.
   Gemini just produces data and calls the same `create_species` later.
 
-## Gemini species lookup (not built yet)
+## Gemini species lookup
 - `POST /species/lookup` takes a typed name (`{"name": "Tomate"}`) and answers a
   species. `POST /species` by hand stays. Photo input comes later as a second route.
 - **Gemini is only asked when the DB doesn't know the name.** Flow: search the DB →
@@ -110,6 +110,15 @@
 - Gemini answers as structured JSON (package `google-genai`, code in `gemini.py`,
   key in `.env` as `GEMINI_API_KEY`). It is told the units: watering interval in
   days, DLI in mol/m²/day.
+- **`generate_content`, not the newer `interactions` call:** in google-genai 2.28
+  `interactions` raises error classes that only exist in a private module, so the
+  public `errors.APIError` doesn't catch them.
+- **20 s timeout, 3 attempts** on the client. Without a timeout a call hung for
+  minutes; under load the model often answers 503, a retry usually works.
+- Free tier: 5 requests per minute per model (429 above that). The DB search first
+  keeps Gemini calls rare.
+- The app doesn't start without `GEMINI_API_KEY`: the client is created when
+  `gemini.py` loads.
 - Gemini's data goes through `SpeciesIn`, so the same rules apply as for hand-made species.
 - Errors: not a plant → 404 "species not found". Gemini unreachable, out of quota or
   its answer breaks the rules → 502. Nothing is saved in both cases.

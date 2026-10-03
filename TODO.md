@@ -8,7 +8,8 @@
       `.gitignore`, commit it (see DECISIONS.md). Without it, `alembic upgrade head`
       fails after a clone and on the server.
 - [x] **Push:** master is in sync with GitHub.
-- [ ] **Deploy** on Render/Vercel with env vars (`DB_URL`, `SECRET_KEY`) and a build pipeline.
+- [ ] **Deploy** on Render/Vercel with env vars (`DB_URL`, `SECRET_KEY`, `GEMINI_API_KEY`)
+      and a build pipeline. The app doesn't start if one is missing.
 - [ ] **README:** add the endpoint list and the live URL after deploying.
 - [ ] **Notion page:** fill in "Datenbank Schema", "Bereitgestellte App-URL",
       "Präsentationsfolie" and the dates.

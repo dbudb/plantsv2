@@ -18,9 +18,12 @@ Built with FastAPI, SQLAlchemy, Alembic and PostgreSQL.
    ```
    DB_URL=postgresql+pg8000://USER:PASSWORD@localhost:5432/DB_NAME
    SECRET_KEY=any-long-random-string
+   GEMINI_API_KEY=your-gemini-api-key
    ```
    `SECRET_KEY` signs the login tokens. Generate one with
    `python -c "import secrets; print(secrets.token_hex(32))"`.
+   `GEMINI_API_KEY` is for the species lookup (`POST /species/lookup`); create one in
+   Google AI Studio. The app doesn't start without both keys.
 
 3. Create the tables:
    ```
