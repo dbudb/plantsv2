@@ -26,6 +26,7 @@ class Species(Base):
     __tablename__ = "species"
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column()
+    botanical_name: Mapped[str | None] = mapped_column(unique=True)
     watering_interval: Mapped[int] = mapped_column()
     max_dli: Mapped[float] = mapped_column()
     min_dli: Mapped[float] = mapped_column()
