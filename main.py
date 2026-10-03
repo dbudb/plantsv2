@@ -201,7 +201,12 @@ def get_species() -> list[SpeciesOut]:
 def add_species(data: SpeciesIn) -> SpeciesOut:
     with SessionLocal() as session:
         species = create_species(
-            session, data.name, data.watering_interval, data.min_dli, data.max_dli
+            session,
+            data.name,
+            data.botanical_name,
+            data.watering_interval,
+            data.min_dli,
+            data.max_dli,
         )
     return species
 

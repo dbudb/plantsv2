@@ -1,11 +1,15 @@
 """Handles the databases reads and writes into and from the species table"""
 
 from models import Species
-from sqlalchemy import select
+from sqlalchemy import func, or_, select
 
-def create_species(session, name, watering_interval, min_dli, max_dli):
+def create_species(session, name, botanical_name, watering_interval, min_dli, max_dli):
     species = Species(
-        name=name, watering_interval=watering_interval, min_dli=min_dli, max_dli=max_dli
+        name=name,
+        botanical_name=botanical_name,
+        watering_interval=watering_interval,
+        min_dli=min_dli,
+        max_dli=max_dli,
     )
     session.add(species)
     session.commit()
@@ -17,6 +21,17 @@ def read_species(session):
 
 def read_one_species(session, species_id: int):
     return session.get(Species, species_id)
+
+def read_species_by_name(session, name: str):
+    name = name.lower()
+    return session.scalars(
+        select(Species).where(
+            or_(
+                func.lower(Species.name) == name,
+                func.lower(Species.botanical_name) == name,
+            )
+        )
+    ).first()
 
 def delete_species(session, species_id: int):
     species = session.get(Species, species_id)
