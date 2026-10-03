@@ -9,6 +9,7 @@ from species_repository import (
     create_species,
     read_species,
     read_one_species,
+    read_species_by_name,
     update_species,
     delete_species,
 )
@@ -27,6 +28,7 @@ from care_event_repository import (
     delete_care_event,
 )
 from user_repository import create_user, read_user_by_email
+from gemini import ask_gemini
 from auth import (
     CurrentUser,
     create_token,
@@ -40,6 +42,7 @@ from schemas import (
     UserOut,
     SpeciesIn,
     SpeciesUpdate,
+    SpeciesLookup,
     SpeciesOut,
     PlantIn,
     PlantUpdate,
@@ -207,6 +210,29 @@ def add_species(data: SpeciesIn) -> SpeciesOut:
             data.watering_interval,
             data.min_dli,
             data.max_dli,
+        )
+    return species
+
+
+@app.post("/species/lookup", dependencies=[Depends(get_current_user)])
+def lookup_species(data: SpeciesLookup) -> SpeciesOut:
+    with SessionLocal() as session:
+        species = read_species_by_name(session, data.name)
+        if species is not None:
+            return species
+        found = ask_gemini(data.name)
+        if found is None:
+            raise HTTPException(status_code=404, detail="species not found")
+        species = read_species_by_name(session, found.botanical_name)
+        if species is not None:
+            return species
+        species = create_species(
+            session,
+            found.name,
+            found.botanical_name,
+            found.watering_interval,
+            found.min_dli,
+            found.max_dli,
         )
     return species
 
