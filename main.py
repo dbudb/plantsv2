@@ -10,6 +10,7 @@ from species_repository import (
     read_species,
     read_one_species,
     read_species_by_name,
+    read_species_by_botanical_name,
     update_species,
     delete_species,
 )
@@ -52,17 +53,12 @@ from schemas import (
     CareEventOut,
 )
 
-print("file loading")
 app = FastAPI()
 
 
 @app.get("/")
 def hello():
-    print("hello called")
     return {"message": "hello plants"}
-
-
-print("hello registered")
 
 
 @app.post("/signup")
@@ -203,6 +199,14 @@ def get_species() -> list[SpeciesOut]:
 @app.post("/species", dependencies=[Depends(get_current_user)])
 def add_species(data: SpeciesIn) -> SpeciesOut:
     with SessionLocal() as session:
+        if (
+            data.botanical_name is not None
+            and read_species_by_botanical_name(session, data.botanical_name)
+            is not None
+        ):
+            raise HTTPException(
+                status_code=409, detail="botanical name already exists"
+            )
         species = create_species(
             session,
             data.name,
@@ -258,10 +262,17 @@ def change_species(species_id: int, data: SpeciesUpdate) -> SpeciesOut:
             raise HTTPException(
                 status_code=422, detail="min_dli is bigger than max_dli"
             )
+        if data.botanical_name is not None:
+            twin = read_species_by_botanical_name(session, data.botanical_name)
+            if twin is not None and twin.id != species_id:
+                raise HTTPException(
+                    status_code=409, detail="botanical name already exists"
+                )
         species = update_species(
             session,
             species_id,
             data.name,
+            data.botanical_name,
             data.watering_interval,
             data.min_dli,
             data.max_dli,

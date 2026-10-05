@@ -33,6 +33,13 @@ def read_species_by_name(session, name: str):
         )
     ).first()
 
+def read_species_by_botanical_name(session, botanical_name: str):
+    return session.scalars(
+        select(Species).where(
+            func.lower(Species.botanical_name) == botanical_name.lower()
+        )
+    ).first()
+
 def delete_species(session, species_id: int):
     species = session.get(Species, species_id)
     if species is None:
@@ -41,12 +48,16 @@ def delete_species(session, species_id: int):
     session.commit()
     return species
 
-def update_species(session, species_id: int, name, watering_interval, min_dli, max_dli):
+def update_species(
+    session, species_id: int, name, botanical_name, watering_interval, min_dli, max_dli
+):
     species = session.get(Species, species_id)
     if species is None:
         return None
     if name is not None:
         species.name = name
+    if botanical_name is not None:
+        species.botanical_name = botanical_name
     if watering_interval is not None:
         species.watering_interval = watering_interval
     if min_dli is not None:

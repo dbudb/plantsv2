@@ -122,8 +122,10 @@
 - Gemini's data goes through `SpeciesIn`, so the same rules apply as for hand-made species.
 - Errors: not a plant → 404 "species not found". Gemini unreachable, out of quota or
   its answer breaks the rules → 502. Nothing is saved in both cases.
-- Open: old rows without a botanical name can get a twin. `POST /species` by hand
-  with an existing botanical name answers 500 until it gets a 409 check.
+- **A botanical name that already exists answers 409** on `POST /species` and
+  `PATCH /species`. The check ignores case and only looks at `botanical_name`, not
+  `name`. On PATCH a species doesn't collide with itself.
+- Open: old rows without a botanical name can get a twin.
 
 ## Features
 - Gemini identifies the species and fills in its needs.

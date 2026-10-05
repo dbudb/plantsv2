@@ -49,6 +49,7 @@ class SpeciesIn(BaseModel):
 
 class SpeciesUpdate(BaseModel):
     name: NonEmptyText | None = None
+    botanical_name: NonEmptyText | None = None
     watering_interval: AboveZero | None = None
     min_dli: ZeroOrMore | None = None
     max_dli: ZeroOrMore | None = None
