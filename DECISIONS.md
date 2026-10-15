@@ -105,6 +105,11 @@
   Species first because `plants.species_id` needs an existing species.
 - Species data is entered by hand for now (via `/docs`), filled in batches later.
   Gemini just produces data and calls the same `create_species` later.
+- **Schema diagram:** `schema.dbml` is written by hand from `models.py`. The dbdiagram.io
+  link in the README and on Notion carries a copy of that file inside the link, so it
+  needs no account. After a model change: update `schema.dbml`, then rebuild the link
+  and replace it in the README and on Notion:
+  `python -c "import base64,urllib.parse as u;print('https://dbdiagram.io/embed#c='+u.quote(base64.b64encode(open('schema.dbml','rb').read()).decode(),safe=''))"`
 
 ## Gemini species lookup
 - `POST /species/lookup` takes a typed name (`{"name": "Tomate"}`) and answers a
