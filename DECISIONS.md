@@ -5,7 +5,8 @@
 - pip + `requirements.txt`, no uv. Update with
   `python -m pip freeze | Out-File -Encoding utf8 requirements.txt`
   (plain `>` in PowerShell writes UTF-16, which git treats as binary).
-- DB password in code for now, move to `.env` later.
+- Secrets live in `.env` (git ignores it): `DB_URL` with the DB password, `SECRET_KEY`,
+  `GEMINI_API_KEY`.
 
 ## Before the first push (to-do)
 - [x] Move the DB URL into `.env`, add `.env` to `.gitignore`, `db.py` reads it from there.
@@ -20,7 +21,10 @@
 - `models.py` — tables (how data is **stored**)
 - `schemas.py` — Pydantic models (what the API **receives** and **sends back**)
 - `species_repository.py` — all DB functions for species
-- `plant_repository.py` — all DB functions for plants (not built yet)
+- `plant_repository.py` — all DB functions for plants
+- `care_event_repository.py` — all DB functions for care events
+- `user_repository.py` — all DB functions for users
+- `auth.py` — password hashing, JWT tokens, `CurrentUser` (the logged-in user of a request)
 - `gemini.py` — asks Gemini for species data
 - `main.py` — routes
 
