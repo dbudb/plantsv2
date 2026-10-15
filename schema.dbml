@@ -1,0 +1,46 @@
+// Plant Tracker database, written from models.py.
+// Diagram: paste into dbdiagram.io, or see the link in README.md.
+
+Table users {
+  id integer [pk, increment]
+  email varchar [not null, unique, note: 'saved lowercase']
+  name varchar [not null]
+  password_hash varchar [not null]
+}
+
+Table species {
+  id integer [pk, increment]
+  name varchar [not null, note: 'common name, e.g. Tomate']
+  botanical_name varchar [unique, note: 'e.g. Solanum lycopersicum']
+  watering_interval integer [not null, note: 'days']
+  min_dli float [not null, note: 'mol/m²/day']
+  max_dli float [not null, note: 'mol/m²/day']
+}
+
+Table plants {
+  id integer [pk, increment]
+  user_id integer [not null, ref: > users.id]
+  species_id integer [not null, ref: > species.id]
+  name varchar [not null]
+  location varchar [not null]
+  created_at timestamp [not null, default: `now()`]
+}
+
+Table care_events {
+  id integer [pk, increment]
+  plant_id integer [not null, ref: > plants.id]
+  event_type event_type [not null, note: 'stored as varchar(50)']
+  amount float [note: 'unit depends on the type: ml water/fertilizer, liters soil, grams']
+  timestamp timestamp [not null]
+  notes varchar
+}
+
+Enum event_type {
+  WATERING
+  FERTILIZING
+  REPOTTING
+  HARVESTING
+  SOWING
+  ACQUIRED
+  TRIMMING
+}
