@@ -63,7 +63,10 @@
     route checks it against the stored values, because a class can't look into the DB.
   - plant `species_id`: the species must exist (404 "species not found")
   - signup: valid email (`EmailStr`, package `email-validator`), password at least 8 characters
-- **Emails are lowercase everywhere:** signup saves lowercase, login lowercases what was typed.
+  - PATCH `/me`: the same rules as signup. A new email that another user already has
+    answers 409; a new password is hashed like on signup.
+- **Emails are lowercase everywhere:** signup and PATCH `/me` save lowercase, login
+  lowercases what was typed.
 - PATCH: a field that is missing or `null` stays unchanged.
 - Unknown fields in a body are ignored (Pydantic default).
 
@@ -95,6 +98,9 @@
   harvest = grams (maybe). Pruning etc. have no amount.
   Unit isn't stored; the backend derives it from the type.
   Open: `notes` field for extras like which fertilizer?
+- **Deleting:** a plant takes its care events with it. A user (DELETE `/me`) takes their
+  plants and those plants' events with them. A species that still has plants can't be
+  deleted (409), because those plants point to it.
 - Build step by step: `species` first, then `plants`, then the rest.
   Species first because `plants.species_id` needs an existing species.
 - Species data is entered by hand for now (via `/docs`), filled in batches later.

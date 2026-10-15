@@ -28,7 +28,12 @@ from care_event_repository import (
     update_care_event,
     delete_care_event,
 )
-from user_repository import create_user, read_user_by_email
+from user_repository import (
+    create_user,
+    read_user_by_email,
+    update_user,
+    delete_user,
+)
 from gemini import ask_gemini
 from auth import (
     CurrentUser,
@@ -40,6 +45,7 @@ from auth import (
 from models import Plant, Species
 from schemas import (
     UserIn,
+    UserUpdate,
     UserOut,
     SpeciesIn,
     SpeciesUpdate,
@@ -83,6 +89,26 @@ def login(form: Annotated[OAuth2PasswordRequestForm, Depends()]):
 @app.get("/me")
 def me(user: CurrentUser) -> UserOut:
     return user
+
+
+@app.patch("/me")
+def change_me(user: CurrentUser, data: UserUpdate) -> UserOut:
+    email = None if data.email is None else data.email.lower()
+    password_hash = None if data.password is None else hash_password(data.password)
+    with SessionLocal() as session:
+        if email is not None:
+            twin = read_user_by_email(session, email)
+            if twin is not None and twin.id != user.id:
+                raise HTTPException(status_code=409, detail="email already registered")
+        changed = update_user(session, user.id, email, data.name, password_hash)
+        return changed
+
+
+@app.delete("/me")
+def remove_me(user: CurrentUser) -> UserOut:
+    with SessionLocal() as session:
+        deleted = delete_user(session, user.id)
+        return deleted
 
 
 @app.get("/plants")
