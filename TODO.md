@@ -11,13 +11,15 @@
 - [x] **User endpoints:** PATCH `/me` (name, email, password) and DELETE `/me`
       (also deletes the user's plants and their care events). Week 5 asks for CRUD
       on all relevant tables.
-- [ ] **Deploy** on Render/Vercel with env vars (`DB_URL`, `SECRET_KEY`, `GEMINI_API_KEY`)
-      and a build pipeline. The app doesn't start if one is missing.
-- [ ] **DB schema:** diagram on dbdiagram.io (DBML), link in README and Notion.
-- [ ] **README:** add the endpoint list and the live URL after deploying.
-- [ ] **Slides:** presentation for week 6, link in Notion.
-- [ ] **Notion page:** fill in "Datenbank Schema", "Bereitgestellte App-URL",
-      "Präsentationsfolie" and the dates.
+- [x] **Deploy** on Render with env vars (`DB_URL`, `SECRET_KEY`, `GEMINI_API_KEY`)
+      and a build pipeline: https://plantsv2-8t8y.onrender.com/docs
+- [x] **DB schema:** diagram on dbdiagram.io (DBML), link in README.
+- [x] **README:** endpoint list and live URL.
+- [x] **Slides:** presentation for week 6 (claude.ai artifact, private until shared).
+- [ ] **Notion page:** title and description are in. Still open: links for
+      "Datenbank Schema", "Bereitgestellte App-URL", "Präsentationsfolie"; dates unknown.
+- [ ] **Free Render DB expires 2026-11-21** (deleted 2026-12-05): recreate or upgrade
+      before the presentation if it's later.
 
 ## Already done
 - REST API with FastAPI
