@@ -1,4 +1,7 @@
-"""Handles the databases reads and writes into and from the care_events table"""
+"""Handles the database reads and writes into and from the care_events table.
+
+Same pattern as species_repository.py: add/commit/refresh, None if not found.
+"""
 
 from models import CareEvent, Plant
 from sqlalchemy import select
@@ -17,6 +20,7 @@ def create_care_event(session, plant_id, event_type, amount, timestamp, notes):
     session.refresh(care_event)
     return care_event
 
+# All events of one plant, oldest first: the plant's history.
 def read_care_events(session, plant_id: int):
     return session.scalars(
         select(CareEvent)
@@ -24,6 +28,8 @@ def read_care_events(session, plant_id: int):
         .order_by(CareEvent.timestamp)
     ).all()
 
+# An event has no user_id: the owner is found through its plant. None if the event
+# doesn't exist or its plant belongs to someone else.
 def read_one_care_event(session, event_id: int, user_id: int):
     care_event = session.get(CareEvent, event_id)
     if care_event is None or session.get(Plant, care_event.plant_id).user_id != user_id:
@@ -38,6 +44,7 @@ def delete_care_event(session, event_id: int):
     session.commit()
     return care_event
 
+# PATCH: only fields that were sent (not None) are changed.
 def update_care_event(session, event_id: int, event_type, amount, timestamp, notes):
     care_event = session.get(CareEvent, event_id)
     if care_event is None:

@@ -1,4 +1,7 @@
-"""Asks Gemini for the data of a species"""
+"""Asks Gemini for the data of a species.
+
+Only used by POST /species/lookup, and only when the DB doesn't know the name.
+"""
 
 import httpx
 from dotenv import load_dotenv
@@ -9,6 +12,8 @@ from pydantic import BaseModel, Field, ValidationError
 
 from schemas import SpeciesIn
 
+# The Gemini client reads GEMINI_API_KEY from the environment, so .env must be
+# loaded before the client is created below.
 load_dotenv()
 
 MODEL = "gemini-3.8-flash"
@@ -19,13 +24,18 @@ PROMPT = (
 )
 
 # Gemini can be slow or overloaded: give up a call after 20 s, try 3 times.
+# Created once when the file loads: without GEMINI_API_KEY the app doesn't start.
 client = genai.Client(
     http_options={"timeout": 20_000, "retry_options": {"attempts": 3}}
 )
 
 
 class GeminiSpecies(BaseModel):
-    """The shape Gemini has to answer in."""
+    """The shape Gemini has to answer in.
+
+    Sent to Gemini as a JSON schema; the descriptions tell it what each field means
+    and which unit to use.
+    """
 
     is_plant: bool = Field(description="false if the text does not name a plant")
     common_name: str = Field(
@@ -48,14 +58,19 @@ def ask_gemini(name: str) -> SpeciesIn | None:
             model=MODEL,
             contents=PROMPT + name,
             config={
+                # Answer as JSON in exactly the GeminiSpecies shape, not as free text.
                 "response_mime_type": "application/json",
                 "response_json_schema": GeminiSpecies.model_json_schema(),
+                # We give it no tools to call; this just switches the feature off.
                 "automatic_function_calling": {"disable": True},
             },
         )
+        # Turns the JSON text into a GeminiSpecies; fails if fields are missing.
         answer = GeminiSpecies.model_validate_json(response.text)
         if not answer.is_plant:
             return None
+        # Through SpeciesIn, so Gemini's data must follow the same rules as
+        # hand-made species (interval > 0, min_dli <= max_dli, ...).
         return SpeciesIn(
             name=answer.common_name,
             botanical_name=answer.botanical_name,
@@ -63,6 +78,9 @@ def ask_gemini(name: str) -> SpeciesIn | None:
             min_dli=answer.min_dli,
             max_dli=answer.max_dli,
         )
+    # APIError: Gemini answered with an error (e.g. 429 quota, 503 overloaded).
+    # HTTPError: no connection or timeout. ValidationError: the answer broke a rule.
+    # All three: Gemini is the problem, not the user, so 502 (bad gateway).
     except (errors.APIError, httpx.HTTPError, ValidationError) as error:
         print("gemini failed:", error)
         raise HTTPException(status_code=502, detail="gemini failed")

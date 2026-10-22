@@ -1,4 +1,8 @@
-"""Handles the databases reads and writes into and from the species table"""
+"""Handles the database reads and writes into and from the species table.
+
+Repository = the only place that talks to the DB. Every function gets the session
+from the route, so one request uses one session (and the route decides when it closes).
+"""
 
 from models import Species
 from sqlalchemy import func, or_, select
@@ -11,17 +15,24 @@ def create_species(session, name, botanical_name, watering_interval, min_dli, ma
         min_dli=min_dli,
         max_dli=max_dli,
     )
+    # add: remember the object; commit: really write it to the DB.
     session.add(species)
     session.commit()
+    # commit wipes the loaded values; refresh reloads them, incl. the new id from
+    # Postgres. Without it: DetachedInstanceError when FastAPI reads the object later.
     session.refresh(species)
     return species
 
 def read_species(session):
+    # scalars: the Species objects themselves, not rows of tuples.
     return session.scalars(select(Species)).all()
 
+# session.get looks up by primary key; None if there is no such id.
 def read_one_species(session, species_id: int):
     return session.get(Species, species_id)
 
+# Matches the common OR the botanical name, ignoring case on both sides
+# ("tomate" finds "Tomate").
 def read_species_by_name(session, name: str):
     name = name.lower()
     return session.scalars(
@@ -33,6 +44,7 @@ def read_species_by_name(session, name: str):
         )
     ).first()
 
+# Only the botanical name, for the "already exists" (409) check.
 def read_species_by_botanical_name(session, botanical_name: str):
     return session.scalars(
         select(Species).where(
@@ -46,8 +58,10 @@ def delete_species(session, species_id: int):
         return None
     session.delete(species)
     session.commit()
+    # The deleted object still holds its values; the route sends them back.
     return species
 
+# PATCH: only fields that were sent (not None) are changed.
 def update_species(
     session, species_id: int, name, botanical_name, watering_interval, min_dli, max_dli
 ):
@@ -64,6 +78,7 @@ def update_species(
         species.min_dli = min_dli
     if max_dli is not None:
         species.max_dli = max_dli
+    # Changing attributes is enough: the session notices it and commit writes an UPDATE.
     session.commit()
     session.refresh(species)
     return species
